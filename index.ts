@@ -76,7 +76,7 @@
  *
  * Usage
  * ==========
- * const graph: AsyncGraphAPI = new AsyncGraph();
+ * const graph = new Viae();
  * graph.value('age', 1);
  * graph.async('birthday', age => Promise.resolve(age+1));
  * graph.entryPoint((birthday) => {
@@ -144,7 +144,7 @@ function extractArgs(fn: Function) {
   return fnText.match(ARROW_DECLARATION) || fnText.match(FUNCTION_DECLARATION);
 }
 
-export class AsyncGraph {
+export class Viae {
   private readonly ROOT_NODE_NAME = 'root';
   private dependencies: {
     [key: string]: GraphNode;

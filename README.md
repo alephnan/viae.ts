@@ -5,7 +5,7 @@ Viae.ts is a library to define a directed-acylic-graph of async functions that p
 ## Usage
 
 ```javascript
-const graph: AsyncGraphAPI = new AsyncGraph();
+const graph = new Viae();
 graph.value('age', 1);
 graph.async('birthday', age => Promise.resolve(age+1));
 graph.entryPoint((birthday) => {

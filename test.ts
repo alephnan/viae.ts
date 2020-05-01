@@ -1,49 +1,49 @@
-import { AsyncGraph } from './index';
+import { Viae } from './index';
 
 const DELAY_MILLIS = 1;
-describe('AsyncGraph', () => {
+describe('Viae', () => {
   it('should throw with node name containing errors', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value(' foo ', 1)).toThrowError(
       'Node name cannot contain whitespace'
     );
   });
   it('should throw with node name is empty', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('', 1)).toThrowError('Node name cannot be empty');
   });
   it('should throw if node name already registered', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('foo', 1);
     expect(() => g.value('foo', 2)).toThrowError(`'foo' is already registered`);
   });
   it('should throw if node name is invalid variable name', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('f oo', 1)).toThrowError(
       `'f oo' is not a valid variable name`
     );
   });
   it(`should throw if node name is the reserved keyword 'function'`, () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('function', 1)).toThrowError(
       `'function' is not a valid variable name`
     );
   });
   it(`should throw if node name is the reserved keyword 'var'`, () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('var', 1)).toThrowError(
       `'var' is not a valid variable name`
     );
   });
   it(`should throw if node name is an invalid variable name starting with '.'`, () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('.foo', 1)).toThrowError(
       `'.foo' is not a valid variable name`
     );
@@ -51,18 +51,18 @@ describe('AsyncGraph', () => {
   it(`should not throw if node name starts with '$' which is a valid variable
        name`, () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('$foo', 1)).not.toThrow();
   });
   it(`should not throw if node name starts with '_' which is a valid variable
        name`, () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     expect(() => g.value('_foo', 1)).not.toThrow();
   });
   it('should allow ES6 arrow function', () => {
     expect.assertions(2);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('num', 1);
     g.async('foo', num => Promise.resolve(num + 1));
     return g.entryPoint((num, foo) => {
@@ -72,7 +72,7 @@ describe('AsyncGraph', () => {
   });
   it('should strip comments in function declarations', () => {
     expect.assertions(3);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('x', 1);
     g.async('xToString', function (x) {
       return Promise.resolve(x + '');
@@ -90,7 +90,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve data value with primitive', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('foo', 1);
     return g.entryPoint(function (foo) {
       expect(foo).toBe(1);
@@ -98,7 +98,7 @@ describe('AsyncGraph', () => {
   });
   it('should throw if data dependency not defined', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('foo', 1);
     try {
       g.entryPoint(function (bar) {
@@ -109,7 +109,7 @@ describe('AsyncGraph', () => {
     }
   });
   it('should resolve data value with same object', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     const originalObject = {
       id: 123,
       phone: 911,
@@ -120,7 +120,7 @@ describe('AsyncGraph', () => {
     });
   });
   it('should resolve multiple data values independent of registration order', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('age', 1337);
     g.value('name', 'Tuan');
     g.value('data', {
@@ -137,7 +137,7 @@ describe('AsyncGraph', () => {
     });
   });
   it('should resolve async function', () => {
-    const g = new asyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('account', function (jwt) {
       return new Promise((resolve, reject) => {
@@ -154,7 +154,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve no-arg async function', () => {
     expect.assertions(1);
-    const g = new asyncGraph();
+    const g = new Viae();
     g.async('x', function () {
       return Promise.resolve(1);
     });
@@ -164,7 +164,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve function declared in variable', () => {
     expect.assertions(1);
-    const g = new asyncGraph();
+    const g = new Viae();
     g.value('x', 1);
     const f = function (x) {
       return Promise.resolve(x + 1);
@@ -176,7 +176,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve functions in their lexical closure', () => {
     expect.assertions(1);
-    const g = new asyncGraph();
+    const g = new Viae();
     g.value('x', 1);
     const y = 2;
     const f = function (x) {
@@ -189,7 +189,7 @@ describe('AsyncGraph', () => {
   });
   it('should throw if async function references non-existent dependency', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.async('account', function (jwt) {
       return Promise.resolve(123);
     });
@@ -202,7 +202,7 @@ describe('AsyncGraph', () => {
     }
   });
   it('should resolve async function with nodes registered out of order', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.async('account', function (jwt) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -218,7 +218,7 @@ describe('AsyncGraph', () => {
     });
   });
   it('should resolve async function that depends on async function', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('account', function (jwt) {
       return new Promise((resolve, reject) => {
@@ -246,7 +246,7 @@ describe('AsyncGraph', () => {
   });
   it('should detect a cycle with distance 2', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.async('chicken', function (egg) {
       return Promise.resolve('Cluck');
     });
@@ -266,7 +266,7 @@ describe('AsyncGraph', () => {
   });
   it('should detect a long cycle', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.async('google', function (goobuntu) {
       return Promise.resolve();
     });
@@ -308,7 +308,7 @@ describe('AsyncGraph', () => {
     }
   });
   it('should resolve async function and async function it depends on', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('account', function (jwt) {
       return new Promise((resolve, reject) => {
@@ -338,7 +338,7 @@ describe('AsyncGraph', () => {
     });
   });
   it('should resolve async function and async function that depends on it', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('account', function (jwt) {
       return new Promise((resolve, reject) => {
@@ -369,7 +369,7 @@ describe('AsyncGraph', () => {
   });
   it('should reject if async function throws', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('campaign', function (jwt) {
       throw new Error('Foo');
@@ -389,7 +389,7 @@ describe('AsyncGraph', () => {
   });
   it('should reject if async function returns rejected Promise', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('jwt', 1);
     g.async('campaign', function (jwt) {
       return Promise.resolve().then(() => {
@@ -412,7 +412,7 @@ describe('AsyncGraph', () => {
   });
   it('should wrap in promise if Function produces a value that is not a Promise', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('x', 1);
     g.async('y', function (x) {
       return x + 1;
@@ -423,7 +423,7 @@ describe('AsyncGraph', () => {
   });
   it('should give precedence to missing node error if async function throws', () => {
     expect.assertions(1);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.async('campaign', function (jw) {
       throw new Error('Foo');
     });
@@ -438,7 +438,7 @@ describe('AsyncGraph', () => {
     }
   });
   it('should resolve async functions with shared data dependency', () => {
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('num', 10);
     g.async('double', function (num) {
       return Promise.resolve(num * 2);
@@ -455,7 +455,7 @@ describe('AsyncGraph', () => {
     expect.assertions(5);
     let bCount = 0;
     let cCount = 0;
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('a', 2);
     g.async('b', function (a) {
       bCount++;
@@ -481,7 +481,7 @@ describe('AsyncGraph', () => {
     const executions = 2;
     const expectations = 3;
     expect.assertions(executions * expectations);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('num', 10);
     g.async('add2', function (num) {
       return Promise.resolve(num + 2);
@@ -508,7 +508,7 @@ describe('AsyncGraph', () => {
     const permutations = 6;
     const expectsPerPermutation = 3;
     expect.assertions(expectsPerPermutation * permutations);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('a', 2);
     g.async('b', function (a) {
       return Promise.resolve(3 * a);
@@ -556,7 +556,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve permutations of bcd with graph d->[b, c], c->b, b->a', () => {
     expect.assertions(3 * 6);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('a', 2);
     g.async('b', function (a) {
       return Promise.resolve(3 * a);
@@ -604,7 +604,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve permutations of bcd with graph d->[c, b], c->b, b->a', () => {
     expect.assertions(3 * 6);
-    const g = new AsyncGraph();
+    const g = new Viae();
     g.value('a', 2);
     g.async('b', function (a) {
       return Promise.resolve(3 * a);
