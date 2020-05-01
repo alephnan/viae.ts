@@ -20,7 +20,7 @@
  * Nodes are named and registered using with:
  *   - PromiseGraph#value: any JavaScript value including primitives, objects, even
  *     functions (treated as data)
- *   - PromiseGraph#AsyncFunction: a function which returns a promise. This function
+ *   - PromiseGraph#async: a function which returns a promise. This function
  *     is treated as a computation and applied. Its output is treated as data.
  *
  * Dependencies
@@ -42,10 +42,10 @@
  * ==========
  * Value nodes resolve to their value.
  *
- * Async Function nodes resolve to the value of the promise it returns.
+ * Async nodes resolve to the value of the promise its function returns.
  *
  * The library unwraps promises and applies the value of the promise to
- * functions which depend on the aforementioned Async Function node.
+ * functions which depend on the aforementioned Async node.
  *
  * Memoization
  * ==========
@@ -78,23 +78,22 @@
  * ==========
  * const graph: AsyncGraphAPI = new AsyncGraph();
  * graph.value('age', 1);
- * graph.computation('birthday', function(age) {
- *   return Promise.resolve(age+1);
- * });
- * graph.entryPoint(function(birthday) {
+ * graph.async('birthday', age => Promise.resolve(age+1));
+ * graph.entryPoint((birthday) => {
  *   console.log(birthday);
  * });
  */
 enum NodeType {
   Value,
-  // Promise produced by applied Async function. Pending resolution to Value.
+  // Promise produced from Async function. Pending resolution to Value.
   Promise,
-  // Denotes the function associated with g#entryPoint, since it has similar
-  // properties to AsyncFunction nodes and is treated similarly.
+  // Denotes the function associated with g#entryPoint. It has similar
+  // properties to Async nodes and is treated similarly.
   EntryPoint,
-  FunctionAsync,
-  // Promise for FunctionAsyncExecutable node.
-  PromiseFunctionAsyncExecutable,
+  // Encapsulates async function definition.
+  Async,
+  // Promise for Async function with resolved values ready for execution.
+  PromiseAsyncExecutable,
 }
 interface ValueNode {
   type: NodeType.Value;
@@ -107,14 +106,14 @@ interface PromiseNode {
   value: Promise<any>;
   dependencies: string[];
 }
-interface FunctionAsyncNode {
-  type: NodeType.FunctionAsync;
+interface AsyncNode {
+  type: NodeType.Async;
   name: string;
   value: FunctionAsync;
   dependencies: string[];
 }
-interface PromiseFunctionAsyncExecutableNode {
-  type: NodeType.PromiseFunctionAsyncExecutable;
+interface PromiseAsyncExecutableNode {
+  type: NodeType.PromiseAsyncExecutable;
   name: string;
   value: FunctionAsync;
   dependencies: string[];
@@ -126,12 +125,9 @@ interface EntryPointNode {
   value: any;
   dependencies: string[];
 }
-type FunctionAsyncDerivativeNode =
-  | PromiseNode
-  | FunctionAsyncNode
-  | PromiseFunctionAsyncExecutableNode;
+type AsyncDerivativeNode = PromiseNode | AsyncNode | PromiseAsyncExecutableNode;
 type UncausedNode = ValueNode;
-type CausedNode = FunctionAsyncDerivativeNode | EntryPointNode;
+type CausedNode = AsyncDerivativeNode | EntryPointNode;
 type GraphNode = UncausedNode | CausedNode;
 type FunctionAsync = (...args: any[]) => Promise<any>;
 
@@ -145,10 +141,7 @@ function stringifyFn(fn: Function): string {
 }
 function extractArgs(fn: Function) {
   const fnText = stringifyFn(fn).replace(STRIP_COMMENTS, '');
-  return (
-    fnText.match(ARROW_DECLARATION) ||
-    fnText.match(FUNCTION_DECLARATION)
-  );
+  return fnText.match(ARROW_DECLARATION) || fnText.match(FUNCTION_DECLARATION);
 }
 
 export class AsyncGraph {
@@ -199,8 +192,8 @@ export class AsyncGraph {
       ancestors
     ).then(dependencies => entryPointNode.apply(entryPointNode, dependencies));
   }
-  // Convert Node.FunctionAsync to NodeType.PromiseFunctionAsyncExecutable nodes.
-  private makeFunctionAsyncNodesExecutable(
+  // Convert Node.Async to NodeType.PromiseAsyncExecutable nodes.
+  private makePromiseAsyncExecutable(
     executionId: number,
     name: string,
     ancestors: string[]
@@ -214,14 +207,14 @@ export class AsyncGraph {
       if (!node) {
         throw new Error(`Node '${nodeName}' was not found in graph.`);
       }
-      if (node.type == NodeType.FunctionAsync) {
+      if (node.type == NodeType.Async) {
         const resolvedValuesPromise: Promise<any[]> = this.resolveDependencies(
           executionId,
           node.name,
           ancestors
         );
         return (this.executions[executionId].copy[nodeName] = {
-          type: NodeType.PromiseFunctionAsyncExecutable,
+          type: NodeType.PromiseAsyncExecutable,
           value: node.value,
           resolvedValuesPromise,
           name: nodeName,
@@ -253,26 +246,23 @@ export class AsyncGraph {
         );
       }
     }
-    this.makeFunctionAsyncNodesExecutable(executionId, name, [
-      ...ancestors,
-      name,
-    ]);
+    this.makePromiseAsyncExecutable(executionId, name, [...ancestors, name]);
     // Promise to resolve dependencies for Node.PromiseFunctionAsyncExecutable
     const resolvedValuesPromises: Array<Promise<any[]>> = [];
-    const promiseFunctionAsyncExecutableNodes: PromiseFunctionAsyncExecutableNode[] = [];
+    const promiseAsyncExecutableNodePromises: PromiseAsyncExecutableNode[] = [];
     formalParameters.forEach((name: string) => {
       const node: GraphNode = this.executions[executionId].copy[name];
-      if (node.type == NodeType.PromiseFunctionAsyncExecutable) {
+      if (node.type == NodeType.PromiseAsyncExecutable) {
         resolvedValuesPromises.push(node.resolvedValuesPromise);
-        promiseFunctionAsyncExecutableNodes.push(node);
+        promiseAsyncExecutableNodePromises.push(node);
       }
     });
     return (
       Promise.all(resolvedValuesPromises)
-        // Reduce Node.FunctionAsync nodes with their resolved values to Node.Promise
+        // Apply executable async node to get Node.Promise.
         .then((resolvedValuesValues: any[][]) => {
-          promiseFunctionAsyncExecutableNodes.forEach((node, i) => {
-            // In the time this set of executable node was being resolved, the
+          promiseAsyncExecutableNodePromises.forEach((node, i) => {
+            // In the time this set of applicable node has being resolved, the
             // particular node may have been resolved by an earlier iteration.
             if (this.executions[executionId].cache[node.name]) {
               return;
@@ -369,10 +359,10 @@ export class AsyncGraph {
       name,
     };
   }
-  functionAsync(name: string, value: FunctionAsync) {
+  async(name: string, value: FunctionAsync) {
     this.validateNodeName(name);
     this.dependencies[name] = {
-      type: NodeType.FunctionAsync,
+      type: NodeType.Async,
       value,
       name,
       dependencies: this.extractFunctionArgs(value),
