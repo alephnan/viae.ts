@@ -2,6 +2,14 @@
 
 Viae.ts is a library to define a directed-acylic-graph of async functions that produce promises and (can) depend on other nodes' produced value. The library efficiently visits the graph, handling promise resolution and dependency injection.
 
+## Usage
+
+```
+$ npm i # install
+$ npm t # test
+$ npm run fmt # format
+```
+
 ## Background
 
 While working at Waze, I encountered a need to provision a graph of REST resources. These tasks are asynchronous and are parameterized by values derived from the output
