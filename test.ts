@@ -5,46 +5,46 @@ describe('AsyncGraph', () => {
   it('should throw with node name containing errors', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data(' foo ', 1)).toThrowError(
+    expect(() => g.value(' foo ', 1)).toThrowError(
       'Node name cannot contain whitespace'
     );
   });
   it('should throw with node name is empty', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('', 1)).toThrowError('Node name cannot be empty');
+    expect(() => g.value('', 1)).toThrowError('Node name cannot be empty');
   });
   it('should throw if node name already registered', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('foo', 1);
-    expect(() => g.data('foo', 2)).toThrowError(`'foo' is already registered`);
+    g.value('foo', 1);
+    expect(() => g.value('foo', 2)).toThrowError(`'foo' is already registered`);
   });
   it('should throw if node name is invalid variable name', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('f oo', 1)).toThrowError(
+    expect(() => g.value('f oo', 1)).toThrowError(
       `'f oo' is not a valid variable name`
     );
   });
   it(`should throw if node name is the reserved keyword 'function'`, () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('function', 1)).toThrowError(
+    expect(() => g.value('function', 1)).toThrowError(
       `'function' is not a valid variable name`
     );
   });
   it(`should throw if node name is the reserved keyword 'var'`, () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('var', 1)).toThrowError(
+    expect(() => g.value('var', 1)).toThrowError(
       `'var' is not a valid variable name`
     );
   });
   it(`should throw if node name is an invalid variable name starting with '.'`, () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('.foo', 1)).toThrowError(
+    expect(() => g.value('.foo', 1)).toThrowError(
       `'.foo' is not a valid variable name`
     );
   });
@@ -52,18 +52,18 @@ describe('AsyncGraph', () => {
        name`, () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('$foo', 1)).not.toThrow();
+    expect(() => g.value('$foo', 1)).not.toThrow();
   });
   it(`should not throw if node name starts with '_' which is a valid variable
        name`, () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    expect(() => g.data('_foo', 1)).not.toThrow();
+    expect(() => g.value('_foo', 1)).not.toThrow();
   });
   it('should allow ES6 arrow function', () => {
     expect.assertions(2);
     const g = new AsyncGraph();
-    g.data('num', 1);
+    g.value('num', 1);
     g.functionAsync('foo', num => Promise.resolve(num + 1));
     return g.entryPoint((num, foo) => {
       expect(num).toBe(1);
@@ -73,7 +73,7 @@ describe('AsyncGraph', () => {
   it('should strip comments in function declarations', () => {
     expect.assertions(3);
     const g = new AsyncGraph();
-    g.data('x', 1);
+    g.value('x', 1);
     g.functionAsync('xToString', function (x) {
       return Promise.resolve(x + '');
     });
@@ -93,7 +93,7 @@ describe('AsyncGraph', () => {
   it('should resolve data value with primitive', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('foo', 1);
+    g.value('foo', 1);
     return g.entryPoint(function (foo) {
       expect(foo).toBe(1);
     });
@@ -101,7 +101,7 @@ describe('AsyncGraph', () => {
   it('should throw if data dependency not defined', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('foo', 1);
+    g.value('foo', 1);
     try {
       g.entryPoint(function (bar) {
         fail();
@@ -116,16 +116,16 @@ describe('AsyncGraph', () => {
       id: 123,
       phone: 911,
     };
-    g.data('bar', originalObject);
+    g.value('bar', originalObject);
     return g.entryPoint(function (bar) {
       expect(bar).toBe(originalObject);
     });
   });
   it('should resolve multiple data values independent of registration order', () => {
     const g = new AsyncGraph();
-    g.data('age', 1337);
-    g.data('name', 'Tuan');
-    g.data('data', {
+    g.value('age', 1337);
+    g.value('name', 'Tuan');
+    g.value('data', {
       id: 123,
       phone: 911,
     });
@@ -140,7 +140,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve async function', () => {
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('account', function (jwt) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -167,7 +167,7 @@ describe('AsyncGraph', () => {
   it('should resolve function declared in variable', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('x', 1);
+    g.value('x', 1);
     const f = function (x) {
       return Promise.resolve(x + 1);
     };
@@ -179,7 +179,7 @@ describe('AsyncGraph', () => {
   it('should resolve functions in their lexical closure', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('x', 1);
+    g.value('x', 1);
     const y = 2;
     const f = function (x) {
       return Promise.resolve(x + y);
@@ -212,7 +212,7 @@ describe('AsyncGraph', () => {
         }, DELAY_MILLIS);
       });
     });
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     return g.entryPoint(function (account) {
       expect(account).toEqual({
         id: 1,
@@ -221,7 +221,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve async function that depends on async function', () => {
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('account', function (jwt) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -290,7 +290,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('c', function (dennisRitchie, kenThompson) {
       return Promise.resolve();
     });
-    g.data('unix', 0);
+    g.value('unix', 0);
     g.functionAsync('kenThompson', function (goobuntu) {
       return Promise.resolve();
     });
@@ -311,7 +311,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve async function and async function it depends on', () => {
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('account', function (jwt) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -341,7 +341,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve async function and async function that depends on it', () => {
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('account', function (jwt) {
       return new Promise((resolve, reject) => {
         setTimeout(() => {
@@ -372,7 +372,7 @@ describe('AsyncGraph', () => {
   it('should reject if async function throws', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('campaign', function (jwt) {
       throw new Error('Foo');
     });
@@ -392,7 +392,7 @@ describe('AsyncGraph', () => {
   it('should reject if async function returns rejected Promise', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('jwt', 1);
+    g.value('jwt', 1);
     g.functionAsync('campaign', function (jwt) {
       return Promise.resolve().then(() => {
         throw new Error('Foo');
@@ -415,7 +415,7 @@ describe('AsyncGraph', () => {
   it('should wrap in promise if Function produces a value that is not a Promise', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
-    g.data('x', 1);
+    g.value('x', 1);
     g.functionAsync('y', function (x) {
       return x + 1;
     });
@@ -441,7 +441,7 @@ describe('AsyncGraph', () => {
   });
   it('should resolve async functions with shared data dependency', () => {
     const g = new AsyncGraph();
-    g.data('num', 10);
+    g.value('num', 10);
     g.functionAsync('double', function (num) {
       return Promise.resolve(num * 2);
     });
@@ -458,7 +458,7 @@ describe('AsyncGraph', () => {
     let bCount = 0;
     let cCount = 0;
     const g = new AsyncGraph();
-    g.data('a', 2);
+    g.value('a', 2);
     g.functionAsync('b', function (a) {
       bCount++;
       return Promise.resolve(3 * a);
@@ -484,7 +484,7 @@ describe('AsyncGraph', () => {
     const expectations = 3;
     expect.assertions(executions * expectations);
     const g = new AsyncGraph();
-    g.data('num', 10);
+    g.value('num', 10);
     g.functionAsync('add2', function (num) {
       return Promise.resolve(num + 2);
     });
@@ -511,7 +511,7 @@ describe('AsyncGraph', () => {
     const expectsPerPermutation = 3;
     expect.assertions(expectsPerPermutation * permutations);
     const g = new AsyncGraph();
-    g.data('a', 2);
+    g.value('a', 2);
     g.functionAsync('b', function (a) {
       return Promise.resolve(3 * a);
     });
@@ -559,7 +559,7 @@ describe('AsyncGraph', () => {
   it('should resolve permutations of bcd with graph d->[b, c], c->b, b->a', () => {
     expect.assertions(3 * 6);
     const g = new AsyncGraph();
-    g.data('a', 2);
+    g.value('a', 2);
     g.functionAsync('b', function (a) {
       return Promise.resolve(3 * a);
     });
@@ -607,7 +607,7 @@ describe('AsyncGraph', () => {
   it('should resolve permutations of bcd with graph d->[c, b], c->b, b->a', () => {
     expect.assertions(3 * 6);
     const g = new AsyncGraph();
-    g.data('a', 2);
+    g.value('a', 2);
     g.functionAsync('b', function (a) {
       return Promise.resolve(3 * a);
     });

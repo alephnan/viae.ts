@@ -8,9 +8,9 @@
  *   - sink: a function which consumes data
  *
  * An async DAG instance is recursively defined as:
- *   - base case: Data nodes which are source nodes / terminal nodes.
- *     Data nodes do not depend on other nodes. From a functional
- *     programming perspective, Data nodes are treated as data
+ *   - base case: Value nodes which are source nodes / terminal nodes.
+ *     Value nodes do not depend on other nodes. From a functional
+ *     programming perspective, Value nodes are treated as data
  *     (rather than computation).
  *   - recursive case: async function nodes which are inner nodes and is
  *     both sink and source. These nodes depend on other node, but can
@@ -18,7 +18,7 @@
  *     Async Function nodes are treated as data AND computation.
  *
  * Nodes are named and registered using with:
- *   - PromiseGraph#valueNode:any JavaScript value including primitives, objects, even
+ *   - PromiseGraph#value: any JavaScript value including primitives, objects, even
  *     functions (treated as data)
  *   - PromiseGraph#AsyncFunction: a function which returns a promise. This function
  *     is treated as a computation and applied. Its output is treated as data.
@@ -40,7 +40,7 @@
  *
  * Resolution / Auto-unboxing of promises
  * ==========
- * Data nodes resolve to their value.
+ * Value nodes resolve to their value.
  *
  * Async Function nodes resolve to the value of the promise it returns.
  *
@@ -77,7 +77,7 @@
  * Usage
  * ==========
  * const graph: AsyncGraphAPI = new AsyncGraph();
- * graph.data('age', 1);
+ * graph.value('age', 1);
  * graph.computation('birthday', function(age) {
  *   return Promise.resolve(age+1);
  * });
@@ -86,8 +86,8 @@
  * });
  */
 enum NodeType {
-  Data,
-  // Promise produced by applied Async function. Pending resolution to Data.
+  Value,
+  // Promise produced by applied Async function. Pending resolution to Value.
   Promise,
   // Denotes the function associated with g#entryPoint, since it has similar
   // properties to AsyncFunction nodes and is treated similarly.
@@ -96,8 +96,8 @@ enum NodeType {
   // Promise for FunctionAsyncExecutable node.
   PromiseFunctionAsyncExecutable,
 }
-interface DataNode {
-  type: NodeType.Data;
+interface ValueNode {
+  type: NodeType.Value;
   name: string;
   value: any;
 }
@@ -130,7 +130,7 @@ type FunctionAsyncDerivativeNode =
   | PromiseNode
   | FunctionAsyncNode
   | PromiseFunctionAsyncExecutableNode;
-type UncausedNode = DataNode;
+type UncausedNode = ValueNode;
 type CausedNode = FunctionAsyncDerivativeNode | EntryPointNode;
 type GraphNode = UncausedNode | CausedNode;
 type FunctionAsync = (...args: any[]) => Promise<any>;
@@ -157,7 +157,7 @@ export class AsyncGraph {
     [key: string]: GraphNode;
   } = {};
   private executionId = 0;
-  // Isolate data for each execution.
+  // Isolate data and snapshot definition at each execution.
   private executions: {
     // Key is executionId.
     [key: number]: {
@@ -206,8 +206,8 @@ export class AsyncGraph {
     ancestors: string[]
   ) {
     const graphNode: GraphNode = this.executions[executionId].copy[name];
-    if (graphNode.type == NodeType.Data) {
-      throw new Error('Internal error. Did not expect data node');
+    if (graphNode.type == NodeType.Value) {
+      throw new Error('Internal error. Did not expect value node.');
     }
     return graphNode.dependencies.map(nodeName => {
       const node: GraphNode = this.executions[executionId].copy[nodeName];
@@ -237,8 +237,8 @@ export class AsyncGraph {
     ancestors: string[]
   ): Promise<any[]> {
     const graphNode: GraphNode = this.executions[executionId].copy[name];
-    if (graphNode.type == NodeType.Data) {
-      throw new Error('Internal error. Did not expect data node');
+    if (graphNode.type == NodeType.Value) {
+      throw new Error('Internal error. Did not expect value node.');
     }
     // Resolve name of dependencies.
     const formalParameters: string[] = graphNode.dependencies;
@@ -318,7 +318,7 @@ export class AsyncGraph {
             };
           });
         })
-        // Reduce Node.Promise nodes to Node.Data.
+        // Reduce Node.Promise nodes to Node.Value.
         .then(() => {
           // Promises for upstream Node.Promise
           const promiseNodePromises: Array<Promise<PromiseNode>> = [],
@@ -332,8 +332,8 @@ export class AsyncGraph {
           });
           return Promise.all(promiseNodePromises).then(promiseNodes => {
             promiseNodeNames.forEach((name, i) => {
-              const node: DataNode = {
-                type: NodeType.Data,
+              const node: ValueNode = {
+                type: NodeType.Value,
                 value: promiseNodes[i],
                 name,
               };
@@ -361,10 +361,10 @@ export class AsyncGraph {
     const message = `Error on path ${trace}. call ${node.name}(${params}) ${reason}`;
     return new Error(message);
   }
-  data(name: string, value: any) {
+  value(name: string, value: any) {
     this.validateNodeName(name);
     this.dependencies[name] = {
-      type: NodeType.Data,
+      type: NodeType.Value,
       value,
       name,
     };
