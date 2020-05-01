@@ -1,6 +1,6 @@
 # Introduction
 
-Viae.ts is a library to define a directed-acylic-graph of async functions that produce promises and (can) depend on other nodes' produced value. The library efficiently visits the graph, handling promise resolution and dependency injection.
+Viae.ts is a library to define a directed-acylic-graph of async functions that return promises and can depend on other nodes with their values recursively resolved. The library efficiently visits the graph, performing dependency injection and unwrapping of promises.
 
 ## Usage
 
