@@ -65,7 +65,7 @@ describe('AsyncGraph', () => {
     const g = new AsyncGraph();
     g.data('num', 1);
     g.functionAsync('foo', num => Promise.resolve(num + 1));
-    return g.execute((num, foo) => {
+    return g.entryPoint((num, foo) => {
       expect(num).toBe(1);
       expect(foo).toBe(2);
     });
@@ -80,7 +80,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('xIsOdd', (/** @number */ x) =>
       Promise.resolve(x % 2 == 1)
     );
-    return g.execute((
+    return g.entryPoint((
       /** @number */ x,
       /** @boolean **/ xIsOdd /** @string*/,
       xToString
@@ -94,7 +94,7 @@ describe('AsyncGraph', () => {
     expect.assertions(1);
     const g = new AsyncGraph();
     g.data('foo', 1);
-    return g.execute(function (foo) {
+    return g.entryPoint(function (foo) {
       expect(foo).toBe(1);
     });
   });
@@ -103,7 +103,7 @@ describe('AsyncGraph', () => {
     const g = new AsyncGraph();
     g.data('foo', 1);
     try {
-      g.execute(function (bar) {
+      g.entryPoint(function (bar) {
         fail();
       });
     } catch (e) {
@@ -117,7 +117,7 @@ describe('AsyncGraph', () => {
       phone: 911,
     };
     g.data('bar', originalObject);
-    return g.execute(function (bar) {
+    return g.entryPoint(function (bar) {
       expect(bar).toBe(originalObject);
     });
   });
@@ -129,7 +129,7 @@ describe('AsyncGraph', () => {
       id: 123,
       phone: 911,
     });
-    return g.execute(function (name, data, age) {
+    return g.entryPoint(function (name, data, age) {
       expect(age).toBe(1337);
       expect(name).toBe('Tuan');
       expect(data).toEqual({
@@ -148,7 +148,7 @@ describe('AsyncGraph', () => {
         }, DELAY_MILLIS);
       });
     });
-    return g.execute(function (account) {
+    return g.entryPoint(function (account) {
       expect(account).toEqual({
         id: 1,
       });
@@ -160,7 +160,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('x', function () {
       return Promise.resolve(1);
     });
-    return g.execute(x => {
+    return g.entryPoint(x => {
       expect(x).toBe(1);
     });
   });
@@ -172,7 +172,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve(x + 1);
     };
     g.functionAsync('y', f);
-    return g.execute(y => {
+    return g.entryPoint(y => {
       expect(y).toBe(2);
     });
   });
@@ -185,7 +185,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve(x + y);
     };
     g.functionAsync('y', f);
-    return g.execute(y => {
+    return g.entryPoint(y => {
       expect(y).toBe(3);
     });
   });
@@ -196,7 +196,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve(123);
     });
     try {
-      g.execute(function (account) {
+      g.entryPoint(function (account) {
         fail();
       });
     } catch (e) {
@@ -213,7 +213,7 @@ describe('AsyncGraph', () => {
       });
     });
     g.data('jwt', 1);
-    return g.execute(function (account) {
+    return g.entryPoint(function (account) {
       expect(account).toEqual({
         id: 1,
       });
@@ -239,7 +239,7 @@ describe('AsyncGraph', () => {
         }, DELAY_MILLIS);
       });
     });
-    return g.execute(function (campaign) {
+    return g.entryPoint(function (campaign) {
       expect(campaign).toEqual({
         id: 123,
         accountId: 1,
@@ -256,7 +256,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve('...');
     });
     try {
-      return g.execute(function (egg) {
+      return g.entryPoint(function (egg) {
         fail();
       });
     } catch (e) {
@@ -298,7 +298,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve();
     });
     try {
-      return g.execute(function (google) {
+      return g.entryPoint(function (google) {
         fail();
       });
     } catch (e) {
@@ -329,7 +329,7 @@ describe('AsyncGraph', () => {
         }, DELAY_MILLIS);
       });
     });
-    return g.execute(function (campaign, account) {
+    return g.entryPoint(function (campaign, account) {
       expect(account).toEqual({
         id: 1,
       });
@@ -359,7 +359,7 @@ describe('AsyncGraph', () => {
         }, DELAY_MILLIS);
       });
     });
-    return g.execute(function (account, campaign) {
+    return g.entryPoint(function (account, campaign) {
       expect(account).toEqual({
         id: 1,
       });
@@ -377,7 +377,7 @@ describe('AsyncGraph', () => {
       throw new Error('Foo');
     });
     return g
-      .execute(function (campaign) {
+      .entryPoint(function (campaign) {
         fail();
       })
       .catch(e => {
@@ -399,7 +399,7 @@ describe('AsyncGraph', () => {
       });
     });
     return g
-      .execute(function (campaign) {
+      .entryPoint(function (campaign) {
         fail();
       })
       .catch(e => {
@@ -419,7 +419,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('y', function (x) {
       return x + 1;
     });
-    return g.execute(function (y) {
+    return g.entryPoint(function (y) {
       expect(y).toBe(2);
     });
   });
@@ -430,7 +430,7 @@ describe('AsyncGraph', () => {
       throw new Error('Foo');
     });
     try {
-      g.execute(function (campaign) {
+      g.entryPoint(function (campaign) {
         fail();
       }).catch(e => {
         fail();
@@ -448,7 +448,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('half', function (num) {
       return Promise.resolve(num / 2);
     });
-    return g.execute(function (double, half) {
+    return g.entryPoint(function (double, half) {
       expect(double).toEqual(20);
       expect(half).toEqual(5);
     });
@@ -467,11 +467,11 @@ describe('AsyncGraph', () => {
       cCount++;
       return Promise.resolve(5 * b);
     });
-    const executionA = g.execute(function (b, c) {
+    const executionA = g.entryPoint(function (b, c) {
       expect(b).toBe(3 * 2);
       expect(c).toBe(5 * (3 * 2));
     });
-    const executionB = g.execute(function (b) {
+    const executionB = g.entryPoint(function (b) {
       expect(b).toBe(3 * 2);
     });
     return Promise.all([executionA, executionB]).then(() => {
@@ -494,12 +494,12 @@ describe('AsyncGraph', () => {
     g.functionAsync('half', function (add2) {
       return Promise.resolve(add2 / 2);
     });
-    const executionA = g.execute(function (add2, double, half) {
+    const executionA = g.entryPoint(function (add2, double, half) {
       expect(add2).toEqual(12);
       expect(double).toEqual(24);
       expect(half).toEqual(6);
     });
-    const executionB = g.execute(function (double, add2, half) {
+    const executionB = g.entryPoint(function (double, add2, half) {
       expect(add2).toEqual(12);
       expect(double).toEqual(24);
       expect(half).toEqual(6);
@@ -524,32 +524,32 @@ describe('AsyncGraph', () => {
     const expectedB = 3 * 2;
     const expectedC = 5 * (3 * 2);
     const expectedD = 7 * (5 * 3 * 2);
-    const bcd = g.execute(function (b, c, d) {
+    const bcd = g.entryPoint(function (b, c, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const bdc = g.execute(function (b, d, c) {
+    const bdc = g.entryPoint(function (b, d, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cbd = g.execute(function (c, b, d) {
+    const cbd = g.entryPoint(function (c, b, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cdb = g.execute(function (c, d, b) {
+    const cdb = g.entryPoint(function (c, d, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dbc = g.execute(function (d, b, c) {
+    const dbc = g.entryPoint(function (d, b, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dcb = g.execute(function (d, c, b) {
+    const dcb = g.entryPoint(function (d, c, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
@@ -572,32 +572,32 @@ describe('AsyncGraph', () => {
     const expectedB = 3 * 2;
     const expectedC = 5 * (3 * 2);
     const expectedD = 7 * (5 * 3 * 2) * (3 * 2);
-    const bcd = g.execute(function (b, c, d) {
+    const bcd = g.entryPoint(function (b, c, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const bdc = g.execute(function (b, d, c) {
+    const bdc = g.entryPoint(function (b, d, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cbd = g.execute(function (c, b, d) {
+    const cbd = g.entryPoint(function (c, b, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cdb = g.execute(function (c, d, b) {
+    const cdb = g.entryPoint(function (c, d, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dbc = g.execute(function (d, b, c) {
+    const dbc = g.entryPoint(function (d, b, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dcb = g.execute(function (d, c, b) {
+    const dcb = g.entryPoint(function (d, c, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
@@ -620,32 +620,32 @@ describe('AsyncGraph', () => {
     const expectedB = 3 * 2;
     const expectedC = 5 * (3 * 2);
     const expectedD = 7 * (5 * 3 * 2) * (3 * 2);
-    const bcd = g.execute(function (b, c, d) {
+    const bcd = g.entryPoint(function (b, c, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const bdc = g.execute(function (b, d, c) {
+    const bdc = g.entryPoint(function (b, d, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cbd = g.execute(function (c, b, d) {
+    const cbd = g.entryPoint(function (c, b, d) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const cdb = g.execute(function (c, d, b) {
+    const cdb = g.entryPoint(function (c, d, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dbc = g.execute(function (d, b, c) {
+    const dbc = g.entryPoint(function (d, b, c) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);
     });
-    const dcb = g.execute(function (d, c, b) {
+    const dcb = g.entryPoint(function (d, c, b) {
       expect(b).toEqual(expectedB);
       expect(c).toEqual(expectedC);
       expect(d).toEqual(expectedD);

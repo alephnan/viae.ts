@@ -33,12 +33,10 @@
  *
  * Execution
  * ==========
- * The graph is not traversed until PromiseGraph#Execute is invoked. For
- * a given Execution, there is an anonymous function which serves as a
- * sink node entrypointing into the graph by depending on one or more
- * nodes registered in the graph.
+ * The graph is not traversed until #entryPoint is invoked.
  *
- * A PromiseGraph can be executed more than once.
+ * A PromiseGraph #entryPoint can be invoked more than once, at which point
+ * the registered graph nodes are snapshotted.
  *
  * Resolution / Auto-unboxing of promises
  * ==========
@@ -83,17 +81,17 @@
  * graph.computation('birthday', function(age) {
  *   return Promise.resolve(age+1);
  * });
- * graph.execute(function(birthday) {
+ * graph.entryPoint(function(birthday) {
  *   console.log(birthday);
  * });
  */
 enum NodeType {
   Data,
-  // Promise produced by executed Async function. Pending resolution to Data.
+  // Promise produced by applied Async function. Pending resolution to Data.
   Promise,
-  // Denotes the function associated with g#execute, since it has similar
+  // Denotes the function associated with g#entryPoint, since it has similar
   // properties to AsyncFunction nodes and is treated similarly.
-  Executable,
+  EntryPoint,
   FunctionAsync,
   // Promise for FunctionAsyncExecutable node.
   PromiseFunctionAsyncExecutable,
@@ -122,8 +120,8 @@ interface PromiseFunctionAsyncExecutableNode {
   dependencies: string[];
   resolvedValuesPromise: Promise<any[]>;
 }
-interface ExecutableNode {
-  type: NodeType.Executable;
+interface EntryPointNode {
+  type: NodeType.EntryPoint;
   name: string;
   value: any;
   dependencies: string[];
@@ -133,7 +131,7 @@ type FunctionAsyncDerivativeNode =
   | FunctionAsyncNode
   | PromiseFunctionAsyncExecutableNode;
 type UncausedNode = DataNode;
-type CausedNode = FunctionAsyncDerivativeNode | ExecutableNode;
+type CausedNode = FunctionAsyncDerivativeNode | EntryPointNode;
 type GraphNode = UncausedNode | CausedNode;
 type FunctionAsync = (...args: any[]) => Promise<any>;
 
@@ -176,7 +174,7 @@ export class AsyncGraph {
    * The injected values are the produced values of functional dependencies,
    * and not to be confused as an execution pipeline of specified dependencies.
    **/
-  execute(executableNode: Function): Promise<any> {
+  entryPoint(entryPointNode: Function): Promise<any> {
     this.executionId++;
     const nodeName = this.ROOT_NODE_NAME;
     const execution = {
@@ -184,9 +182,9 @@ export class AsyncGraph {
         {
           [nodeName]: {
             name: nodeName,
-            type: NodeType.Executable,
-            value: executableNode,
-            dependencies: this.extractFunctionArgs(executableNode),
+            type: NodeType.EntryPoint,
+            value: entryPointNode,
+            dependencies: this.extractFunctionArgs(entryPointNode),
           },
         },
         this.dependencies
@@ -197,10 +195,10 @@ export class AsyncGraph {
     const ancestors = [];
     return this.resolveDependencies(
       this.executionId,
-      executableNode,
+      entryPointNode,
       nodeName,
       ancestors
-    ).then(dependencies => executableNode.apply(executableNode, dependencies));
+    ).then(dependencies => entryPointNode.apply(entryPointNode, dependencies));
   }
   // Convert Node.FunctionAsync to NodeType.PromiseFunctionAsyncExecutable nodes.
   private makeFunctionAsyncNodesExecutable(
