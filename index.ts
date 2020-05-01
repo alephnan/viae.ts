@@ -143,27 +143,24 @@ export interface AsyncGraphAPI {
   execute(executableNode: Function): Promise<void>;
   asyncFunction(name: string, value: FunctionAsync): void;
   data(name: string, value: any): void;
+
 }
-// Utility for extracting argument name from anonymous functions.
-class FunctionParser {
-  // Patterns extracted from AngularJS
-  // https://github.com/angular/angular.js/blob/master/src/auto/injector.js
-  private readonly ARROW_DECLARATION = /^([^(]+?)=>/;
-  private readonly FUNCTION_DECLARATION = /^[^(]*\(\s*([^)]*)\)/m;
-  private readonly STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
-  constructor() {}
-  private stringifyFn(fn: Function): string {
-    return Function.prototype.toString.call(fn);
-  }
-  extractArgs(fn: Function) {
-    const fnText = this.stringifyFn(fn).replace(this.STRIP_COMMENTS, '');
-    return (
-      fnText.match(this.ARROW_DECLARATION) ||
-      fnText.match(this.FUNCTION_DECLARATION)
-    );
-  }
+// Patterns extracted from AngularJS
+// https://github.com/angular/angular.js/blob/master/src/auto/injector.js
+const ARROW_DECLARATION = /^([^(]+?)=>/;
+const FUNCTION_DECLARATION = /^[^(]*\(\s*([^)]*)\)/m;
+const STRIP_COMMENTS = /((\/\/.*$)|(\/\*[\s\S]*?\*\/))/gm;
+function stringifyFn(fn: Function): string {
+  return Function.prototype.toString.call(fn);
 }
-const functionParser = new FunctionParser();
+function extractArgs(fn: Function) {
+  const fnText = stringifyFn(fn).replace(STRIP_COMMENTS, '');
+  return (
+    fnText.match(ARROW_DECLARATION) ||
+    fnText.match(FUNCTION_DECLARATION)
+  );
+}
+
 export class AsyncGraph {
   private readonly ROOT_NODE_NAME = 'root';
   private dependencies: {
@@ -417,7 +414,7 @@ export class AsyncGraph {
     }
   }
   private extractFunctionArgs(f: Function): string[] {
-    const argsMatch = functionParser.extractArgs(f);
+    const argsMatch = extractArgs(f);
     if (argsMatch === null || argsMatch.length < 2) {
       throw new Error(`Invalid function declaration: ${f}.`);
     }
