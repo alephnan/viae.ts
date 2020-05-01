@@ -195,7 +195,6 @@ export class AsyncGraph {
     const ancestors = [];
     return this.resolveDependencies(
       this.executionId,
-      entryPointNode,
       nodeName,
       ancestors
     ).then(dependencies => entryPointNode.apply(entryPointNode, dependencies));
@@ -218,7 +217,6 @@ export class AsyncGraph {
       if (node.type == NodeType.FunctionAsync) {
         const resolvedValuesPromise: Promise<any[]> = this.resolveDependencies(
           executionId,
-          node.value,
           node.name,
           ancestors
         );
@@ -235,7 +233,6 @@ export class AsyncGraph {
   }
   private resolveDependencies(
     executionId: number,
-    target: Function,
     name: string,
     ancestors: string[]
   ): Promise<any[]> {
