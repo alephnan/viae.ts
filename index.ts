@@ -98,7 +98,7 @@ enum NodeType {
   // Promise for FunctionAsyncExecutable node.
   PromiseFunctionAsyncExecutable,
   // Invocable  Async Function.
-  FunctionAsyncExecutable
+  FunctionAsyncExecutable,
 }
 interface DataNode {
   type: NodeType.Data;
@@ -197,12 +197,12 @@ export class AsyncGraph {
             name: nodeName,
             type: NodeType.Executable,
             value: executableNode,
-            dependencies: this.extractFunctionArgs(executableNode)
-          }
+            dependencies: this.extractFunctionArgs(executableNode),
+          },
         },
         this.dependencies
       ),
-      cache: {}
+      cache: {},
     };
     this.executions[this.executionId] = execution;
     const ancestors = [];
@@ -211,9 +211,7 @@ export class AsyncGraph {
       executableNode,
       nodeName,
       ancestors
-    ).then((dependencies) =>
-      executableNode.apply(executableNode, dependencies)
-    );
+    ).then(dependencies => executableNode.apply(executableNode, dependencies));
   }
   // Convert Node.FunctionAsync to NodeType.PromiseFunctionAsyncExecutable nodes.
   private makeFunctionAsyncNodesExecutable(
@@ -223,7 +221,7 @@ export class AsyncGraph {
     names: string[],
     ancestors: string[]
   ) {
-    return names.map((nodeName) => {
+    return names.map(nodeName => {
       const node: GraphNode = this.executions[executionId].copy[nodeName];
       if (!node) {
         throw new Error(`Node '${nodeName}' was not found in graph.`);
@@ -242,7 +240,7 @@ export class AsyncGraph {
           value: node.value,
           resolvedValuesPromise,
           name: nodeName,
-          dependencies: node.dependencies
+          dependencies: node.dependencies,
         });
       }
       return node;
@@ -274,7 +272,7 @@ export class AsyncGraph {
     }
     this.makeFunctionAsyncNodesExecutable(executionId, formalParameters, [
       ...ancestors,
-      name
+      name,
     ]);
     // Promise to resolve dependencies for Node.PromiseFunctionAsyncExecutable
     const resolvedValuesPromises: Array<Promise<any[]>> = [];
@@ -319,7 +317,7 @@ export class AsyncGraph {
               );
               promiseNodeValue = Promise.resolve(promiseNodeValue);
             }
-            promiseNodeValue = promiseNodeValue.catch((e) => {
+            promiseNodeValue = promiseNodeValue.catch(e => {
               const reason = `returned Promise rejected with (${e})`;
               throw this.getNodeError(
                 ancestors,
@@ -333,7 +331,7 @@ export class AsyncGraph {
               type: NodeType.Promise,
               value: promiseNodeValue,
               name: node.name,
-              dependencies: node.dependencies
+              dependencies: node.dependencies,
             };
           });
         })
@@ -342,19 +340,19 @@ export class AsyncGraph {
           // Promises for upstream Node.Promise
           const promiseNodePromises: Array<Promise<PromiseNode>> = [],
             promiseNodeNames: string[] = [];
-          formalParameters.forEach((name) => {
+          formalParameters.forEach(name => {
             const promiseNode = this.executions[executionId].copy[name];
             if (promiseNode.type == NodeType.Promise) {
               promiseNodePromises.push(promiseNode.value);
               promiseNodeNames.push(name);
             }
           });
-          return Promise.all(promiseNodePromises).then((promiseNodes) => {
+          return Promise.all(promiseNodePromises).then(promiseNodes => {
             promiseNodeNames.forEach((name, i) => {
               const node: DataNode = {
                 type: NodeType.Data,
                 value: promiseNodes[i],
-                name
+                name,
               };
               this.executions[executionId].copy[name] = node;
               this.executions[executionId].cache[name] = node;
@@ -363,7 +361,7 @@ export class AsyncGraph {
         })
         .then(() =>
           formalParameters.map(
-            (name) => this.executions[executionId].copy[name].value
+            name => this.executions[executionId].copy[name].value
           )
         )
     );
@@ -385,7 +383,7 @@ export class AsyncGraph {
     this.dependencies[name] = {
       type: NodeType.Data,
       value,
-      name
+      name,
     };
   }
   functionAsync(name: string, value: FunctionAsync) {
@@ -394,7 +392,7 @@ export class AsyncGraph {
       type: NodeType.FunctionAsync,
       value,
       name,
-      dependencies: this.extractFunctionArgs(value)
+      dependencies: this.extractFunctionArgs(value),
     };
   }
   private validateNodeName(name: string) {
@@ -428,6 +426,6 @@ export class AsyncGraph {
     if (isNoArgumentFn) {
       return [];
     }
-    return argsString.split(',').map((arg) => arg.trim());
+    return argsString.split(',').map(arg => arg.trim());
   }
 }

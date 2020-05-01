@@ -64,7 +64,7 @@ describe('AsyncGraph', () => {
     expect.assertions(2);
     const g = new AsyncGraph();
     g.data('num', 1);
-    g.functionAsync('foo', (num) => Promise.resolve(num + 1));
+    g.functionAsync('foo', num => Promise.resolve(num + 1));
     return g.execute((num, foo) => {
       expect(num).toBe(1);
       expect(foo).toBe(2);
@@ -114,7 +114,7 @@ describe('AsyncGraph', () => {
     const g = new AsyncGraph();
     const originalObject = {
       id: 123,
-      phone: 911
+      phone: 911,
     };
     g.data('bar', originalObject);
     return g.execute(function (bar) {
@@ -127,14 +127,14 @@ describe('AsyncGraph', () => {
     g.data('name', 'Tuan');
     g.data('data', {
       id: 123,
-      phone: 911
+      phone: 911,
     });
     return g.execute(function (name, data, age) {
       expect(age).toBe(1337);
       expect(name).toBe('Tuan');
       expect(data).toEqual({
         phone: 911,
-        id: 123
+        id: 123,
       });
     });
   });
@@ -150,7 +150,7 @@ describe('AsyncGraph', () => {
     });
     return g.execute(function (account) {
       expect(account).toEqual({
-        id: 1
+        id: 1,
       });
     });
   });
@@ -160,7 +160,7 @@ describe('AsyncGraph', () => {
     g.functionAsync('x', function () {
       return Promise.resolve(1);
     });
-    return g.execute((x) => {
+    return g.execute(x => {
       expect(x).toBe(1);
     });
   });
@@ -172,7 +172,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve(x + 1);
     };
     g.functionAsync('y', f);
-    return g.execute((y) => {
+    return g.execute(y => {
       expect(y).toBe(2);
     });
   });
@@ -185,7 +185,7 @@ describe('AsyncGraph', () => {
       return Promise.resolve(x + y);
     };
     g.functionAsync('y', f);
-    return g.execute((y) => {
+    return g.execute(y => {
       expect(y).toBe(3);
     });
   });
@@ -215,7 +215,7 @@ describe('AsyncGraph', () => {
     g.data('jwt', 1);
     return g.execute(function (account) {
       expect(account).toEqual({
-        id: 1
+        id: 1,
       });
     });
   });
@@ -234,7 +234,7 @@ describe('AsyncGraph', () => {
         setTimeout(() => {
           resolve({
             id: 123,
-            accountId: account.id
+            accountId: account.id,
           });
         }, DELAY_MILLIS);
       });
@@ -242,7 +242,7 @@ describe('AsyncGraph', () => {
     return g.execute(function (campaign) {
       expect(campaign).toEqual({
         id: 123,
-        accountId: 1
+        accountId: 1,
       });
     });
   });
@@ -324,18 +324,18 @@ describe('AsyncGraph', () => {
         setTimeout(() => {
           resolve({
             id: 123,
-            accountId: account.id
+            accountId: account.id,
           });
         }, DELAY_MILLIS);
       });
     });
     return g.execute(function (campaign, account) {
       expect(account).toEqual({
-        id: 1
+        id: 1,
       });
       expect(campaign).toEqual({
         id: 123,
-        accountId: 1
+        accountId: 1,
       });
     });
   });
@@ -354,18 +354,18 @@ describe('AsyncGraph', () => {
         setTimeout(() => {
           resolve({
             id: 123,
-            accountId: account.id
+            accountId: account.id,
           });
         }, DELAY_MILLIS);
       });
     });
     return g.execute(function (account, campaign) {
       expect(account).toEqual({
-        id: 1
+        id: 1,
       });
       expect(campaign).toEqual({
         id: 123,
-        accountId: 1
+        accountId: 1,
       });
     });
   });
@@ -380,7 +380,7 @@ describe('AsyncGraph', () => {
       .execute(function (campaign) {
         fail();
       })
-      .catch((e) => {
+      .catch(e => {
         expect(e).toEqual(
           new Error(
             `Error on path root->campaign. ` +
@@ -402,7 +402,7 @@ describe('AsyncGraph', () => {
       .execute(function (campaign) {
         fail();
       })
-      .catch((e) => {
+      .catch(e => {
         expect(e).toEqual(
           new Error(
             `Error on path root->campaign. ` +
@@ -432,7 +432,7 @@ describe('AsyncGraph', () => {
     try {
       g.execute(function (campaign) {
         fail();
-      }).catch((e) => {
+      }).catch(e => {
         fail();
       });
     } catch (e) {
