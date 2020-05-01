@@ -97,8 +97,6 @@ enum NodeType {
   FunctionAsync,
   // Promise for FunctionAsyncExecutable node.
   PromiseFunctionAsyncExecutable,
-  // Invocable Async Function.
-  FunctionAsyncExecutable,
 }
 interface DataNode {
   type: NodeType.Data;
@@ -138,13 +136,7 @@ type UncausedNode = DataNode;
 type CausedNode = FunctionAsyncDerivativeNode | ExecutableNode;
 type GraphNode = UncausedNode | CausedNode;
 type FunctionAsync = (...args: any[]) => Promise<any>;
-type ExecutableFunctionAsync = (...args: any[]) => Promise<any>;
-export interface AsyncGraphAPI {
-  execute(executableNode: Function): Promise<void>;
-  asyncFunction(name: string, value: FunctionAsync): void;
-  data(name: string, value: any): void;
 
-}
 // Patterns extracted from AngularJS
 // https://github.com/angular/angular.js/blob/master/src/auto/injector.js
 const ARROW_DECLARATION = /^([^(]+?)=>/;
