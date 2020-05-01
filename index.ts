@@ -97,7 +97,7 @@ enum NodeType {
   FunctionAsync,
   // Promise for FunctionAsyncExecutable node.
   PromiseFunctionAsyncExecutable,
-  // Invocable  Async Function.
+  // Invocable Async Function.
   FunctionAsyncExecutable,
 }
 interface DataNode {
@@ -213,18 +213,18 @@ export class AsyncGraph {
   // Convert Node.FunctionAsync to NodeType.PromiseFunctionAsyncExecutable nodes.
   private makeFunctionAsyncNodesExecutable(
     executionId: number,
-    // TODO: can be replaced with nodeName, since nodes store their dependencies
-    // value now..
-    names: string[],
+    name: string,
     ancestors: string[]
   ) {
-    return names.map(nodeName => {
+    const graphNode: GraphNode = this.executions[executionId].copy[name];
+    if (graphNode.type == NodeType.Data) {
+      throw new Error('Internal error. Did not expect data node');
+    }
+    return graphNode.dependencies.map(nodeName => {
       const node: GraphNode = this.executions[executionId].copy[nodeName];
       if (!node) {
         throw new Error(`Node '${nodeName}' was not found in graph.`);
       }
-      // TODO(b/153010141): deprecate and perform at registration time, once
-      // nodes registered in order.
       if (node.type == NodeType.FunctionAsync) {
         const resolvedValuesPromise: Promise<any[]> = this.resolveDependencies(
           executionId,
@@ -256,7 +256,6 @@ export class AsyncGraph {
     // Resolve name of dependencies.
     const formalParameters: string[] = graphNode.dependencies;
     // Checks for a backedge, effectively implements cycle detection.
-    // TODO(b/153010141): Can be deprecated once we enforce nodes registered in topological order..
     for (let i = 0; i < formalParameters.length; i++) {
       const index = ancestors.indexOf(formalParameters[i]);
       if (index >= 0) {
@@ -267,7 +266,7 @@ export class AsyncGraph {
         );
       }
     }
-    this.makeFunctionAsyncNodesExecutable(executionId, formalParameters, [
+    this.makeFunctionAsyncNodesExecutable(executionId, name, [
       ...ancestors,
       name,
     ]);
