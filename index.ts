@@ -187,7 +187,7 @@ export class AsyncGraph {
    * The injected values are the produced values of functional dependencies,
    * and not to be confused as an execution pipeline of specified dependencies.
    **/
-  execute(executableNode: Function): Promise<void> {
+  execute(executableNode: Function): Promise<any> {
     this.executionId++;
     const nodeName = this.ROOT_NODE_NAME;
     const execution = {
